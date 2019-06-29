@@ -112,6 +112,7 @@ def selection_window(source):
     new_panel()
     command('setlocal cursorline')
     command('setlocal nowrap')
+    command('set filetype=Select')
 
     b = current.buffer
     w = current.window
@@ -148,9 +149,6 @@ def selection_window(source):
     map_insert_key('<Enter>', select)
 
     map_normal_key("q", dismiss)
-
-    # TODO add hooks for these kind of things
-    vim.command("if g:loaded_deoplete | call deoplete#custom#buffer_option('auto_complete', v:false) | endif")
 
     start_insert_after_cursor()
 EOF
