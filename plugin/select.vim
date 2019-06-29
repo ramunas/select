@@ -20,31 +20,8 @@ python3 << EOF
 from vim import *
 import fnmatch
 import itertools
+import os.path
 
-
-test_list = [
-    'Applications',
-    'Desktop',
-    'Documents',
-    'Downloads',
-    'Dropbox',
-    'Homepage',
-    'Library',
-    'Mail',
-    'Maildir',
-    'Movies',
-    'Music',
-    'MyProjects',
-    'Pictures',
-    'Projects',
-    'Public',
-    'bin',
-    'node_modules',
-    'pt',
-    'shortcutstovim.py',
-    'test.vim',
-    'tmp',
-]
 
 __callbacks__ = []
 def add_callback(action):
@@ -103,29 +80,47 @@ def test_list_source():
 
 
 def buffers():
-    max_shown_name = 20
+    buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
+
+    # list the alt buf first
+    alt = saved_state['alternate_buf_number']
+    buffers = [ b for b in buffers if b.number == alt ] + [ b for b in buffers if b.number != alt ]
+
+    def buf_name(b):
+        name = vim.eval('bufname(%d)' % b.number)
+        if b.options['buftype'] == b'':
+            return os.path.basename(name)
+        return name
+
+    num_columns = 5
+    columns = [ 
+        [
+            buf_name(b),
+            '[+]' if b.options['modified'] else '[ ]',
+            str(b.number),
+            '[%s]' % b.options['filetype'].decode('utf-8'),
+            b.name,
+        ] for b in buffers ]
+
+    widths = [
+        max( [ len(columns[j][i]) for j in range(len(columns)) ] )
+        for i in range(num_columns)
+    ]
+
+    format_pattern = ' '.join([ '%' + str(widths[i]) + 's' for i in range(num_columns)])
+
     class E:
-        def __init__(self,buf):
-            self.buf = buf
-            self.name = vim.eval('bufname(%d)' % buf.number)
+        def __init__(self,idx):
+            self.i = idx
+            self.name = buf_name(buffers[self.i])
         def match(self):
             return self.name
-        def view(self):
-            return  self.name + ' ' + str(self.buf.number) + ' ' + ('[+]' if self.buf.options['modified'] else '') + ' ' + self.buf.name
+        def view(self): 
+            return format_pattern % tuple(columns[self.i])
         def on_select(self):
-            current.buffer = self.buf
-            print (self.buf, "selected")
+            current.buffer = buffers[self.i]
 
-    # show the alternate buf first
-    alt = saved_state['alternate_buf_number']
-    alt_buf = []
-    if alt >= 0:
-        for b in vim.buffers:
-            if b.number == alt:
-                alt_buf = [E(b)]
-                break
-    # TODO: sort by most recently used/accessed
-    return itertools.chain(alt_buf, (E(b) for b in vim.buffers if b.options["buflisted"] and b.number != alt))
+    return [ E(i) for i in range(len(buffers)) ]
 
 
 saved_state = {}
