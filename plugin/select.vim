@@ -1,21 +1,3 @@
-" :py print "Hello"               # displays a message
-" :py vim.command(cmd)            # execute an Ex command
-" :py w = vim.windows[n]          # gets window "n"
-" :py cw = vim.current.window     # gets the current window
-" :py b = vim.buffers[n]          # gets buffer "n"
-" :py cb = vim.current.buffer     # gets the current buffer
-" :py w.height = lines            # sets the window height
-" :py w.cursor = (row, col)       # sets the window cursor position
-" :py pos = w.cursor              # gets a tuple (row, col)
-" :py name = b.name               # gets the buffer file name
-" :py line = b[n]                 # gets a line from the buffer
-" :py lines = b[n:m]              # gets a list of lines
-" :py num = len(b)                # gets the number of lines
-" :py b[n] = str                  # sets a line in the buffer
-" :py b[n:m] = [str1, str2, str3] # sets a number of lines at once
-" :py del b[n]                    # deletes a line
-" :py del b[n:m]                  # deletes a number of lines
-
 python3 << EOF
 from vim import *
 import fnmatch
@@ -63,21 +45,6 @@ def start_insert_after_cursor():
     else:
         current.window.cursor = (line, col+1)
         command('startinsert')
-
-
-def test_list_source():
-    class E:
-        def __init__(self,s):
-            self.s = s
-        def match(self):
-            return self.s
-        def view(self):
-            return self.s
-        def on_select(self):
-            print (self.s, " selected")
-
-    return ( E(x) for x in test_list )
-
 
 def buffers():
     buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
@@ -167,13 +134,13 @@ def selection_window(source):
     add_event_listener('TextChanged', text_changed)
     add_event_listener('TextChangedI', text_changed)
 
-
     def select():
         line = w.cursor[0]
         selected = (2 if line == 1 else line) - 2
         if len(matched[0]) > 0:
             dismiss()
             matched[0][selected].on_select()
+            vim.command("stopinsert")
         else:
             print("Not matches found for the query")
 
@@ -182,7 +149,10 @@ def selection_window(source):
 
     map_normal_key("q", dismiss)
 
-    # start_insert_after_cursor()
+    # TODO add hooks for these kind of things
+    vim.command("if g:loaded_deoplete | call deoplete#custom#buffer_option('auto_complete', v:false) | endif")
+
+    start_insert_after_cursor()
 EOF
 
 
