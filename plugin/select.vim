@@ -107,7 +107,7 @@ def buffers():
         for i in range(num_columns)
     ]
 
-    format_pattern = ' '.join([ '%' + str(widths[i]) + 's' for i in range(num_columns)])
+    format_pattern = ' '.join([ '%-' + str(widths[i]) + 's' for i in range(num_columns)])
 
     class E:
         def __init__(self,idx):
