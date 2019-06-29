@@ -62,7 +62,7 @@ def buffers():
     num_columns = 5
     columns = [ 
         [
-            buf_name(b),
+            (lambda name: '(unnamed)' if name == '' else name) (buf_name(b)),
             '[+]' if b.options['modified'] else '[ ]',
             str(b.number),
             '[%s]' % b.options['filetype'].decode('utf-8'),
