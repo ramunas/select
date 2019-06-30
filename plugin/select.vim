@@ -33,7 +33,6 @@ def add_event_listener(event, action):
 
 def new_panel():
     command("botright new")
-    # hidden 
     command("setlocal nobuflisted nomodified buftype=nofile bufhidden=wipe")
 
 
@@ -45,6 +44,7 @@ def start_insert_after_cursor():
     else:
         current.window.cursor = (line, col+1)
         command('startinsert')
+
 
 def buffers():
     buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
@@ -88,6 +88,55 @@ def buffers():
             current.buffer = buffers[self.i]
 
     return [ E(i) for i in range(len(buffers)) ]
+
+
+def lambda_obj(d):
+    return (type('', (object,), d))()
+
+
+def files():
+    import os
+    import os.path
+
+    def partition(predicates, it):
+        return tuple( (filter(p, it) for p in predicates ) )
+
+    entries = [e for e in os.scandir('.') if not e.name.startswith('.')]
+
+    part = partition( (lambda e: e.is_file(), lambda e: e.is_dir(), lambda e: not(e.is_file() or e.is_dir())), entries)
+    sort_on_name = lambda e: e.name
+    (files, dirs, others) = tuple(map(lambda entries: sorted(entries, key=sort_on_name), part))
+
+    file_list = (
+        (lambda entry:
+            lambda_obj(dict(
+                dismiss   = not(entry.is_dir()),
+                match     = lambda self: entry.name,
+                view      = lambda self: entry.name + '/' if entry.is_dir() else entry.name,
+                on_select = lambda self: command("cd " + entry.name) if entry.is_dir() else command("edit " + entry.name)
+            ))) (e)
+        for e in itertools.chain(files, dirs, others)
+    )
+
+    # current_dir = os.path.basename(os.getcwd())
+
+    up_dir = [
+        lambda_obj(dict(
+            dismiss = False,
+            match = lambda s: '..',
+            view = lambda s: '.. (up dir)',
+            on_select = lambda s: command("cd ..")
+        )),
+
+        # lambda_obj(dict(
+        #     dismiss = False,
+        #     match = lambda s: '..',
+        #     view = lambda s: current_dir + ' (go back to)',
+        #     on_select = lambda s: command("cd " + current_dir)
+        # ))
+    ]
+
+    return itertools.chain(up_dir, file_list)
 
 
 saved_state = {}
@@ -139,9 +188,18 @@ def selection_window(source):
         line = w.cursor[0]
         selected = (2 if line == 1 else line) - 2
         if len(matched[0]) > 0:
-            dismiss()
-            matched[0][selected].on_select()
-            vim.command("stopinsert")
+            entry = matched[0][selected]
+            dis = not(hasattr(entry, 'dismiss')) or entry.dismiss
+
+            if dis: dismiss()
+
+            entry.on_select()
+
+            if not dis and b.number == current.buffer.number:
+                # action was token on the buffer, so redo the matches
+                text_changed()
+            else:
+                vim.command("stopinsert")
         else:
             print("Not matches found for the query")
 
@@ -150,15 +208,15 @@ def selection_window(source):
 
     map_normal_key("q", dismiss)
 
-    start_insert_after_cursor()
+    # start_insert_after_cursor()
 EOF
 
 
 function! Buffers()
-python3 << EOF
-# selection_window(test_list_source)
-selection_window(buffers)
-EOF
+python3 selection_window(buffers)
 endfunction
 
+function! Files()
+python3 selection_window(files)
+endfunction
 
