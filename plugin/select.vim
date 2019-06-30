@@ -197,6 +197,7 @@ def selection_window(source):
 
             if not dis and b.number == current.buffer.number:
                 # action was token on the buffer, so redo the matches
+                b[0] = ''
                 text_changed()
             else:
                 vim.command("stopinsert")
