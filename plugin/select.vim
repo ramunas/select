@@ -208,7 +208,7 @@ def selection_window(source):
 
     map_normal_key("q", dismiss)
 
-    # start_insert_after_cursor()
+    start_insert_after_cursor()
 EOF
 
 
