@@ -46,97 +46,112 @@ def start_insert_after_cursor():
         command('startinsert')
 
 
-def buffers():
-    buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
-
-    # list the alt buf first
-    alt = saved_state['alternate_buf_number']
-    buffers = [ b for b in buffers if b.number == alt ] + [ b for b in buffers if b.number != alt ]
-
-    def buf_name(b):
-        name = vim.eval('bufname(%d)' % b.number)
-        if b.options['buftype'] == b'':
-            return os.path.basename(name)
-        return name
-
-    num_columns = 5
-    columns = [ 
-        [
-            (lambda name: '(unnamed)' if name == '' else name) (buf_name(b)),
-            '[+]' if b.options['modified'] else '[ ]',
-            str(b.number),
-            '[%s]' % b.options['filetype'].decode('utf-8'),
-            b.name,
-        ] for b in buffers ]
-
-    widths = [
-        max( [ len(columns[j][i]) for j in range(len(columns)) ] )
-        for i in range(num_columns)
-    ]
-
-    format_pattern = ' '.join([ '%-' + str(widths[i]) + 's' for i in range(num_columns)])
-
-    class E:
-        def __init__(self,idx):
-            self.i = idx
-            self.name = buf_name(buffers[self.i])
-        def match(self):
-            return self.name
-        def view(self): 
-            return format_pattern % tuple(columns[self.i])
-        def on_select(self):
-            current.buffer = buffers[self.i]
-
-    return [ E(i) for i in range(len(buffers)) ]
+class SelectionList(object):
+    def entries(self):
+        return []
+    def syntax(self):
+        pass
+    def no_match_entries(self):
+        pass
 
 
-def lambda_obj(d):
+class BufferList(SelectionList):
+    def entries(self):
+        buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
+
+        # list the alt buf first
+        alt = saved_state['alternate_buf_number']
+        buffers = [ b for b in buffers if b.number == alt ] + [ b for b in buffers if b.number != alt ]
+
+        def buf_name(b):
+            name = vim.eval('bufname(%d)' % b.number)
+            if b.options['buftype'] == b'':
+                return os.path.basename(name)
+            return name
+
+        num_columns = 5
+        columns = [ 
+            [
+                (lambda name: '(unnamed)' if name == '' else name) (buf_name(b)),
+                '[+]' if b.options['modified'] else '[ ]',
+                str(b.number),
+                '[%s]' % b.options['filetype'].decode('utf-8'),
+                b.name,
+            ] for b in buffers ]
+
+        widths = [
+            max( [ len(columns[j][i]) for j in range(len(columns)) ] )
+            for i in range(num_columns)
+        ]
+
+        format_pattern = ' '.join([ '%-' + str(widths[i]) + 's' for i in range(num_columns)])
+
+        class E:
+            def __init__(self,idx):
+                self.i = idx
+                self.name = buf_name(buffers[self.i])
+            def match(self):
+                return self.name
+            def view(self): 
+                return format_pattern % tuple(columns[self.i])
+            def on_select(self):
+                current.buffer = buffers[self.i]
+
+        return [ E(i) for i in range(len(buffers)) ]
+
+
+def lambda_obj(**d):
     return (type('', (object,), d))()
 
 
-def files():
-    import os
-    import os.path
+class FileList(SelectionList):
+    def entries(self):
+        import os
+        import os.path
 
-    def partition(predicates, it):
-        return tuple( (filter(p, it) for p in predicates ) )
+        def partition(predicates, it):
+            return tuple( (filter(p, it) for p in predicates ) )
 
-    entries = [e for e in os.scandir('.') if not e.name.startswith('.')]
+        entries = [e for e in os.scandir('.') if not e.name.startswith('.')]
 
-    part = partition( (lambda e: e.is_file(), lambda e: e.is_dir(), lambda e: not(e.is_file() or e.is_dir())), entries)
-    sort_on_name = lambda e: e.name
-    (files, dirs, others) = tuple(map(lambda entries: sorted(entries, key=sort_on_name), part))
+        part = partition( (lambda e: e.is_file(), lambda e: e.is_dir(), lambda e: not(e.is_file() or e.is_dir())), entries)
+        sort_on_name = lambda e: e.name
+        (files, dirs, others) = tuple(map(lambda entries: sorted(entries, key=sort_on_name), part))
 
-    file_list = (
-        (lambda entry:
-            lambda_obj(dict(
-                dismiss   = not(entry.is_dir()),
-                match     = lambda self: entry.name,
-                view      = lambda self: entry.name + '/' if entry.is_dir() else entry.name,
-                on_select = lambda self: command("cd " + entry.name) if entry.is_dir() else command("edit " + entry.name)
-            ))) (e)
-        for e in itertools.chain(files, dirs, others)
-    )
+        cwd = os.path.abspath(os.getcwd())
 
-    # current_dir = os.path.basename(os.getcwd())
+        file_list = (
+            (lambda entry:
+                lambda_obj(
+                    dismiss   = not(entry.is_dir()),
+                    match     = lambda s: entry.name,
+                    view      = lambda s: entry.name + '/' if entry.is_dir() else entry.name,
+                    on_select = lambda s: command("cd " + entry.name)
+                                          if entry.is_dir()
+                                          else command("edit " + os.path.join(cwd, entry.name))
+                )) (e)
+            for e in itertools.chain(files, dirs, others)
+        )
 
-    up_dir = [
-        lambda_obj(dict(
-            dismiss = False,
-            match = lambda s: '..',
-            view = lambda s: '.. (up dir)',
-            on_select = lambda s: command("cd ..")
-        )),
+        up_dir = [
+            lambda_obj(
+                dismiss = False,
+                match = lambda s: '..',
+                view = lambda s: '.. (up dir 🔙)',
+                on_select = lambda s: command("cd .. ")
+            ),
 
-        # lambda_obj(dict(
-        #     dismiss = False,
-        #     match = lambda s: '..',
-        #     view = lambda s: current_dir + ' (go back to)',
-        #     on_select = lambda s: command("cd " + current_dir)
-        # ))
-    ]
+            # lambda_obj(
+            #     dismiss = False,
+            #     match = lambda s: '..',
+            #     view = lambda s: current_dir + ' (go back to)',
+            #     on_select = lambda s: command("cd " + current_dir)
+            # )
+        ]
 
-    return itertools.chain(up_dir, file_list)
+        # vim.command("hi match ")
+
+        return itertools.chain(up_dir, file_list)
 
 
 saved_state = {}
@@ -173,7 +188,7 @@ def selection_window(source):
 
     matched = [None]
     def match(s):
-        matched[0] = [x for x in source() if match_glob_pattern(s, x.match())]
+        matched[0] = [x for x in source.entries() if match_glob_pattern(s, x.match())]
         b[1:] = [ x.view() for x in matched[0] ]
 
     def text_changed():
@@ -209,15 +224,15 @@ def selection_window(source):
 
     map_normal_key("q", dismiss)
 
-    start_insert_after_cursor()
+    # start_insert_after_cursor()
 EOF
 
 
 function! Buffers()
-python3 selection_window(buffers)
+python3 selection_window(BufferList())
 endfunction
 
 function! Files()
-python3 selection_window(files)
+python3 selection_window(FileList())
 endfunction
 
