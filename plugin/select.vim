@@ -107,9 +107,11 @@ def lambda_obj(**d):
 
 class FileList(SelectionList):
     def syntax(self):
-        vim.command("syn match Title |^.*\.|")
+        vim.command("syn match Type |^.*$|")
+        vim.command("syn match Type |^.*\.|me=e-1")
+        vim.command("syn match Normal |\..*$|")
         vim.command("syn match Directory |^.*/$|")
-        vim.command("syn match SpecialKey |\[.*\]|")
+        vim.command("syn match Special |\[.*\]|")
 
     def entries(self):
         import os
@@ -143,13 +145,13 @@ class FileList(SelectionList):
             lambda_obj(
                 dismiss = False,
                 match = lambda s: '..',
-                view = lambda s: '[.. up dir]',
+                view = lambda s: '..',
                 on_select = lambda s: command("cd .. ")
             ),
             lambda_obj(
                 dismiss = False,
                 match = lambda s: '',
-                view = lambda s: '[working directory ' + cwd + ']',
+                view = lambda s: cwd,
                 on_select = lambda s: None
             ),
 
