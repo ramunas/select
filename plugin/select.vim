@@ -130,7 +130,7 @@ class FileList(SelectionList):
                 lambda_obj(
                     dismiss   = not(entry.is_dir()),
                     match     = lambda s: entry.name,
-                    view      = lambda s: entry.name + '/' if entry.is_dir() else entry.name,
+                    view      = lambda s: '  ' + (entry.name + '/' if entry.is_dir() else entry.name),
                     on_select = lambda s: command("cd " + entry.name)
                                           if entry.is_dir()
                                           else command("edit " + os.path.join(cwd, entry.name))
