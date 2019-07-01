@@ -105,6 +105,11 @@ def lambda_obj(**d):
 
 
 class FileList(SelectionList):
+    def syntax(self):
+        vim.command("syn match Title |^.*\.|")
+        vim.command("syn match Directory |^.*/$|")
+        vim.command("syn match SpecialKey |\[.*\]|")
+
     def entries(self):
         import os
         import os.path
@@ -137,7 +142,7 @@ class FileList(SelectionList):
             lambda_obj(
                 dismiss = False,
                 match = lambda s: '..',
-                view = lambda s: '.. [up dir]',
+                view = lambda s: '[.. up dir]',
                 on_select = lambda s: command("cd .. ")
             ),
             lambda_obj(
@@ -186,6 +191,8 @@ def selection_window(source):
 
     b = current.buffer
     w = current.window
+
+    source.syntax()
 
     b[0] = ''
 
