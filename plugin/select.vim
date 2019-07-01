@@ -137,8 +137,14 @@ class FileList(SelectionList):
             lambda_obj(
                 dismiss = False,
                 match = lambda s: '..',
-                view = lambda s: '.. (up dir 🔙)',
+                view = lambda s: '.. [up dir]',
                 on_select = lambda s: command("cd .. ")
+            ),
+            lambda_obj(
+                dismiss = False,
+                match = lambda s: '',
+                view = lambda s: '[working directory ' + cwd + ']',
+                on_select = lambda s: None
             ),
 
             # lambda_obj(
@@ -224,7 +230,7 @@ def selection_window(source):
 
     map_normal_key("q", dismiss)
 
-    # start_insert_after_cursor()
+    start_insert_after_cursor()
 EOF
 
 
