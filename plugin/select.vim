@@ -54,6 +54,16 @@ class SelectionList(object):
     def no_match_entries(self):
         pass
 
+class SelectionItem(object):
+    dismiss = True
+    def on_select(self):
+        pass
+    def match(self):
+        return ''
+    def view(self):
+        return ''
+
+
 
 class BufferList(SelectionList):
     def entries(self):
@@ -86,7 +96,7 @@ class BufferList(SelectionList):
 
         format_pattern = ' '.join([ '%-' + str(widths[i]) + 's' for i in range(num_columns)])
 
-        class E:
+        class E(SelectionItem):
             def __init__(self,idx):
                 self.i = idx
                 self.name = buf_name(buffers[self.i])
@@ -100,8 +110,10 @@ class BufferList(SelectionList):
         return [ E(i) for i in range(len(buffers)) ]
 
 
-def lambda_obj(**d):
-    return (type('', (object,), d))()
+def lambda_obj(*i, **d):
+    cls = tuple(i)
+    if len(cls) == 0: cls = (object,)
+    return (type('', cls, d))()
 
 
 class FileList(SelectionList):
@@ -129,7 +141,7 @@ class FileList(SelectionList):
 
         file_list = (
             (lambda entry:
-                lambda_obj(
+                lambda_obj(SelectionItem,
                     dismiss   = not(entry.is_dir()),
                     match     = lambda s: entry.name,
                     view      = lambda s: '  ' + (entry.name + '/' if entry.is_dir() else entry.name),
@@ -141,13 +153,13 @@ class FileList(SelectionList):
         )
 
         up_dir = [
-            lambda_obj(
+            lambda_obj(SelectionItem,
                 dismiss = False,
                 match = lambda s: '..',
                 view = lambda s: '..',
                 on_select = lambda s: command("cd .. ")
             ),
-            lambda_obj(
+            lambda_obj(SelectionItem,
                 dismiss = False,
                 match = lambda s: '',
                 view = lambda s: cwd,
@@ -219,7 +231,7 @@ def selection_window(source):
         selected = (2 if line == 1 else line) - 2
         if len(matched[0]) > 0:
             entry = matched[0][selected]
-            dis = not(hasattr(entry, 'dismiss')) or entry.dismiss
+            dis = entry.dismiss
 
             if dis: dismiss()
 
