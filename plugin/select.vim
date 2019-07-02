@@ -76,8 +76,7 @@ class BufferList(SelectionList):
                 '[+]' if b.options['modified'] else '[ ]',
                 str(b.number),
                 '[%s]' % b.options['filetype'].decode('utf-8'),
-                os.path.relpath(b.name),
-                # b.name,
+                os.path.relpath(b.name) if b.name != '' else '',
             ] for b in buffers ]
 
         widths = [
