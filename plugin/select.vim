@@ -117,6 +117,9 @@ def lambda_obj(*i, **d):
 
 
 class FileList(SelectionList):
+    def __init__(self):
+        self.history = []
+
     def syntax(self):
         vim.command("syn match Type |^.*$|")
         vim.command("syn match Type |^.*\.|me=e-1")
@@ -139,13 +142,17 @@ class FileList(SelectionList):
 
         cwd = os.path.abspath(os.getcwd())
 
+        def cd(d):
+            self.history.append(cwd)
+            command("cd " + d)
+
         file_list = (
             (lambda entry:
                 lambda_obj(SelectionItem,
                     dismiss   = not(entry.is_dir()),
                     match     = lambda s: entry.name,
                     view      = lambda s: '  ' + (entry.name + '/' if entry.is_dir() else entry.name),
-                    on_select = lambda s: command("cd " + entry.name)
+                    on_select = lambda s: cd(entry.name)
                                           if entry.is_dir()
                                           else command("edit " + os.path.join(cwd, entry.name))
                 )) (e)
@@ -157,7 +164,7 @@ class FileList(SelectionList):
                 dismiss = False,
                 match = lambda s: '..',
                 view = lambda s: '..',
-                on_select = lambda s: command("cd .. ")
+                on_select = lambda s: cd('..')
             ),
             lambda_obj(SelectionItem,
                 dismiss = False,
@@ -165,16 +172,19 @@ class FileList(SelectionList):
                 view = lambda s: cwd,
                 on_select = lambda s: None
             ),
-
-            # lambda_obj(
-            #     dismiss = False,
-            #     match = lambda s: '..',
-            #     view = lambda s: current_dir + ' (go back to)',
-            #     on_select = lambda s: command("cd " + current_dir)
-            # )
         ]
 
-        # vim.command("hi match ")
+        def go_back():
+            d = self.history.pop()
+            command("cd " + d)
+
+        if len(self.history) > 0:
+            up_dir.append(lambda_obj(SelectionItem,
+                            dismiss = False,
+                            match = lambda s: '',
+                            view = lambda s: self.history[-1] + ' [go back]',
+                            on_select = lambda s: go_back()
+                        ))
 
         return itertools.chain(up_dir, file_list)
 
