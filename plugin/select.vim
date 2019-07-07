@@ -119,6 +119,7 @@ def lambda_obj(*i, **d):
 class FileList(SelectionList):
     def __init__(self):
         self.history = []
+        self.show_hidden = False
 
     def syntax(self):
         vim.command("syn match Type |^.*$|")
@@ -134,7 +135,8 @@ class FileList(SelectionList):
         def partition(predicates, it):
             return tuple( (filter(p, it) for p in predicates ) )
 
-        entries = [e for e in os.scandir('.') if not e.name.startswith('.')]
+        # hidden ==> show_hidden
+        entries = [e for e in os.scandir('.') if not e.name.startswith('.') or self.show_hidden]
 
         part = partition( (lambda e: e.is_file(), lambda e: e.is_dir(), lambda e: not(e.is_file() or e.is_dir())), entries)
         sort_on_name = lambda e: e.name
@@ -174,6 +176,7 @@ class FileList(SelectionList):
             ),
         ]
 
+
         def go_back():
             d = self.history.pop()
             vim.command("cd " + d)
@@ -185,6 +188,15 @@ class FileList(SelectionList):
                             view = lambda s: self.history[-1] + ' [go back]',
                             on_select = lambda s: go_back()
                         ))
+
+        def flip_show_hidden():
+            self.show_hidden = not self.show_hidden
+
+        up_dir.append(lambda_obj(SelectionItem,
+            dismiss = False,
+            view = lambda s: '[hide hidden]' if self.show_hidden else '[show hidden]',
+            on_select = lambda s: flip_show_hidden()
+        ))
 
         return itertools.chain(up_dir, file_list)
 
