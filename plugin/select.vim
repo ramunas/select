@@ -247,7 +247,7 @@ def selection_window(source):
 
             entry.on_select()
 
-            if not dis and b.number == current.buffer.number:
+            if not dis and b.number == vim.current.buffer.number:
                 # action was token on the buffer, so redo the matches
                 b[0] = ''
                 text_changed()
