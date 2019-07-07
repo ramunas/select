@@ -1,5 +1,5 @@
 python3 << EOF
-from vim import *
+import vim
 import fnmatch
 import itertools
 import os.path
@@ -21,29 +21,29 @@ def call_callback_text(idx):
 
 def map_normal_key(key, action):
     i = add_callback(action)
-    command("map <silent> <buffer> %s :python3 %s<cr>" % (key, call_callback_text(i)))
+    vim.command("map <silent> <buffer> %s :python3 %s<cr>" % (key, call_callback_text(i)))
 
 def map_insert_key(key, action):
     i = add_callback(action)
-    command("imap <silent> <buffer> %s <C-O>:python3 %s<cr>" % (key, call_callback_text(i)))
+    vim.command("imap <silent> <buffer> %s <C-O>:python3 %s<cr>" % (key, call_callback_text(i)))
 
 def add_event_listener(event, action):
     i = add_callback(action)
-    command("autocmd %s <buffer> python3 %s" % (event, call_callback_text(i)))
+    vim.command("autocmd %s <buffer> python3 %s" % (event, call_callback_text(i)))
 
 def new_panel():
-    command("botright new")
-    command("setlocal nobuflisted nomodified buftype=nofile bufhidden=wipe")
+    vim.command("botright new")
+    vim.command("setlocal nobuflisted nomodified buftype=nofile bufhidden=wipe")
 
 
 def start_insert_after_cursor():
-    (line,col) = current.window.cursor
-    chars = len(current.buffer[line - 1])
+    (line,col) = vim.current.window.cursor
+    chars = len(vim.current.buffer[line - 1])
     if col == chars - 1:
-        command('startinsert!')
+        vim.command('startinsert!')
     else:
-        current.window.cursor = (line, col+1)
-        command('startinsert')
+        vim.current.window.cursor = (line, col+1)
+        vim.command('startinsert')
 
 
 class SelectionList(object):
@@ -105,7 +105,7 @@ class BufferList(SelectionList):
             def view(self): 
                 return format_pattern % tuple(columns[self.i])
             def on_select(self):
-                current.buffer = buffers[self.i]
+                vim.current.buffer = buffers[self.i]
 
         return [ E(i) for i in range(len(buffers)) ]
 
@@ -144,7 +144,7 @@ class FileList(SelectionList):
 
         def cd(d):
             self.history.append(cwd)
-            command("cd " + d)
+            vim.command("cd " + d)
 
         file_list = (
             (lambda entry:
@@ -154,7 +154,7 @@ class FileList(SelectionList):
                     view      = lambda s: '  ' + (entry.name + '/' if entry.is_dir() else entry.name),
                     on_select = lambda s: cd(entry.name)
                                           if entry.is_dir()
-                                          else command("edit " + os.path.join(cwd, entry.name))
+                                          else vim.command("edit " + os.path.join(cwd, entry.name))
                 )) (e)
             for e in itertools.chain(files, dirs, others)
         )
@@ -176,7 +176,7 @@ class FileList(SelectionList):
 
         def go_back():
             d = self.history.pop()
-            command("cd " + d)
+            vim.command("cd " + d)
 
         if len(self.history) > 0:
             up_dir.append(lambda_obj(SelectionItem,
@@ -192,29 +192,29 @@ class FileList(SelectionList):
 saved_state = {}
 
 def selection_window(source):
-    initial_window = current.window
-    initial_buffer = current.buffer
+    initial_window = vim.current.window
+    initial_buffer = vim.current.buffer
 
     def dismiss():
         if (len(vim.windows) == 1):
-            current.buffer = initial_buffer
+            vim.current.buffer = initial_buffer
         else:
             if initial_window in vim.windows and initial_window.buffer == initial_buffer:
-                command("q")
+                vim.command("q")
                 vim.current.window = initial_window
             else:
                 # FIXME buffer might no longer exists. What to do in this case then depends on application.
-                current.buffer = initial_buffer
+                vim.current.buffer = initial_buffer
 
     saved_state['alternate_buf_number'] = int(vim.eval('bufnr("#")'))
 
     new_panel()
-    command('setlocal cursorline')
-    command('setlocal nowrap')
-    command('set filetype=Select')
+    vim.command('setlocal cursorline')
+    vim.command('setlocal nowrap')
+    vim.command('set filetype=Select')
 
-    b = current.buffer
-    w = current.window
+    b = vim.current.buffer
+    w = vim.current.window
 
     source.syntax()
 
