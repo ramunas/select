@@ -5,6 +5,15 @@ import itertools
 import os.path
 
 
+def lambda_obj(*i, **d):
+    cls = tuple(i)
+    if len(cls) == 0: cls = (object,)
+    return (type('', cls, d))()
+
+def seq(*commands):
+    return None
+
+
 __callbacks__ = []
 def add_callback(action):
     global __callbacks__
@@ -51,7 +60,7 @@ class SelectionList(object):
         return []
     def syntax(self):
         pass
-    def no_match_entries(self):
+    def no_match_entries(self, pattern):
         return []
 
 class SelectionItem(object):
@@ -64,8 +73,12 @@ class SelectionItem(object):
         return ''
 
 
-
 class BufferList(SelectionList):
+    def syntax(self):
+        vim.command('syntax match Special |\[.\{-}\]|')
+        vim.command('syntax match LineNr |[0-9]\+|')
+        vim.command('syntax match Type |^.\{-} |')
+
     def entries(self):
         buffers = [ b for b in vim.buffers if b.options["buflisted"] ]
 
@@ -109,14 +122,6 @@ class BufferList(SelectionList):
 
         return [ E(i) for i in range(len(buffers)) ]
 
-
-def lambda_obj(*i, **d):
-    cls = tuple(i)
-    if len(cls) == 0: cls = (object,)
-    return (type('', cls, d))()
-
-def seq(*commands):
-    return None
 
 
 class FileList(SelectionList):
