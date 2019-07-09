@@ -52,7 +52,7 @@ class SelectionList(object):
     def syntax(self):
         pass
     def no_match_entries(self):
-        pass
+        return []
 
 class SelectionItem(object):
     dismiss = True
@@ -114,6 +114,9 @@ def lambda_obj(*i, **d):
     cls = tuple(i)
     if len(cls) == 0: cls = (object,)
     return (type('', cls, d))()
+
+def seq(*commands):
+    return None
 
 
 class FileList(SelectionList):
@@ -200,6 +203,23 @@ class FileList(SelectionList):
 
         return itertools.chain(up_dir, file_list)
 
+    def no_match_entries(self, pattern):
+        cwd = os.path.abspath(os.getcwd())
+        filepath = os.path.join(cwd, pattern)
+
+        return [
+            lambda_obj(SelectionItem,
+                dismiss = True,
+                view = lambda s: '[edit ' + filepath  + ']',
+                on_select = lambda s: vim.command("edit " + filepath)
+            ),
+            lambda_obj(SelectionItem,
+                dismiss = False,
+                view = lambda s: '[mkdir ' + filepath  + ']',
+                on_select = lambda s: seq(os.mkdir(filepath), vim.command("cd " + filepath))
+            )
+        ]
+
 
 saved_state = {}
 
@@ -237,7 +257,10 @@ def selection_window(source):
 
     matched = [None]
     def match(s):
-        matched[0] = [x for x in source.entries() if match_glob_pattern(s, x.match())]
+        matches = [x for x in source.entries() if match_glob_pattern(s, x.match())]
+        if matches == []:
+            matches = source.no_match_entries(s)
+        matched[0] = matches
         b[1:] = [ x.view() for x in matched[0] ]
 
     def text_changed():
