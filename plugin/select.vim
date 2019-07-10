@@ -92,13 +92,16 @@ class BufferList(SelectionList):
                 return os.path.basename(name)
             return name
 
+        def tostr(x):
+            return x if isinstance(x, str) else x.decode('utf-8')
+
         num_columns = 5
         columns = [ 
             [
                 (lambda name: '(unnamed)' if name == '' else name) (buf_name(b)),
                 '[+]' if b.options['modified'] else '[ ]',
                 str(b.number),
-                '[%s]' % b.options['filetype'].decode('utf-8'),
+                '[%s]' % tostr(b.options['filetype']),
                 os.path.relpath(b.name) if b.name != '' else '',
             ] for b in buffers ]
 
