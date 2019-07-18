@@ -156,7 +156,10 @@ class FileList(SelectionList):
         cwd = os.path.abspath(os.getcwd())
 
         def cd(d):
-            self.history.append(cwd)
+            if (len(self.history) > 0 and self.history[-1] == cwd) or os.path.abspath(os.path.expanduser(d)) == cwd:
+                pass
+            else:
+                self.history.append(cwd)
             vim.command("cd " + d)
 
         file_list = (
@@ -186,7 +189,6 @@ class FileList(SelectionList):
                 on_select = lambda s: None
             ),
         ]
-
 
         def go_back():
             d = self.history.pop()
