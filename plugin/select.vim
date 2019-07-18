@@ -209,7 +209,18 @@ class FileList(SelectionList):
             on_select = lambda s: flip_show_hidden()
         ))
 
-        return itertools.chain(up_dir, file_list)
+        user_home = os.path.expanduser('~')
+
+        home_dir = [
+            lambda_obj(SelectionItem,
+                dismiss = False,
+                view = lambda s: '  ~ %s [home]' % user_home,
+                match = lambda s: '~ %s' % user_home,
+                on_select = lambda s: cd('~')
+            )
+        ]
+
+        return itertools.chain(up_dir, file_list, home_dir)
 
     def no_match_entries(self, pattern):
         cwd = os.path.abspath(os.getcwd())
