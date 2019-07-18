@@ -240,7 +240,7 @@ def selection_window(source):
             vim.current.buffer = initial_buffer
         else:
             if initial_window in vim.windows and initial_window.buffer == initial_buffer:
-                vim.command("q")
+                vim.command("close")
                 vim.current.window = initial_window
             else:
                 # FIXME buffer might no longer exists. What to do in this case then depends on application.
