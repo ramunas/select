@@ -247,6 +247,7 @@ saved_state = {}
 def selection_window(source):
     initial_window = vim.current.window
     initial_buffer = vim.current.buffer
+    layout = []
 
     def dismiss():
         if (len(vim.windows) == 1):
@@ -254,12 +255,18 @@ def selection_window(source):
         else:
             if initial_window in vim.windows and initial_window.buffer == initial_buffer:
                 vim.command("close")
+                for w,wd,ht in layout:
+                    w.width = wd
+                    w.height = ht
                 vim.current.window = initial_window
             else:
                 # FIXME buffer might no longer exists. What to do in this case then depends on application.
                 vim.current.buffer = initial_buffer
 
     saved_state['alternate_buf_number'] = int(vim.eval('bufnr("#")'))
+
+    # save window layout
+    layout = [ (w, w.width, w.height) for w in vim.windows]
 
     new_panel()
     vim.command('setlocal cursorline')
