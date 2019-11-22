@@ -311,7 +311,9 @@ def selection_window(source):
             print("Not matches found for the query")
 
     map_normal_key('<Enter>', select)
+    map_normal_key('<2-LeftMouse>', select)
     map_insert_key('<Enter>', select)
+    map_insert_key('<2-LeftMouse>', select)
 
     map_normal_key("q", dismiss)
 
