@@ -152,7 +152,7 @@ class FileList(SelectionList):
         if glob_pattern != '..':
             glob_pattern = glob_pattern + '*'
 
-        files = glob.glob(glob_pattern) #, recursive=True)
+        files = glob.iglob(glob_pattern)
 
         matched = files != []
         result = []
