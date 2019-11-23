@@ -358,7 +358,7 @@ class LanguageClientSymbolList(SelectionList):
         return [
             (lambda symbol:
                 lambda_obj(SelectionItem,
-                view = lambda s: ('%' + str(self.name_len) + 's %10s %s') % (symbol['name'], kind(symbol), self.buffer[int(symbol['location']['range']['start']['line'])][0:80]),
+                view = lambda s: ('%-' + str(self.name_len) + 's %-10s %s') % (symbol['name'], kind(symbol), self.buffer[int(symbol['location']['range']['start']['line'])][0:80]),
                 on_select = lambda s: jump(symbol)
                 ))(symbol) for symbol in self.symbols if fnmatch.fnmatch(symbol['name'], pattern)
         ]
