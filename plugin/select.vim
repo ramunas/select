@@ -211,7 +211,7 @@ class FileList(SelectionList):
                     view      = lambda s: '  ' + (entry.name + '/' if entry.is_dir() else entry.name),
                     on_select = lambda s: cd(entry.name)
                                           if entry.is_dir()
-                                          else vim.command("edit " + os.path.join(cwd, entry.name))
+                                          else vim.command("edit " + os.path.join(cwd, entry.name).replace('%', '\\%'))
                 )) (e)
             for e in itertools.chain(files, dirs, others)
         ]
@@ -319,55 +319,6 @@ def selection_window(source):
 
     start_insert_after_cursor()
 
-
-class LanguageClientSymbolList(SelectionList):
-    def __init__(self):
-        # An exmaple of a member of the list returned by LanguageClient
-        # {'containerName': '',
-        # 'kind': '5',
-        # 'location': {'range': {'end': {'character': '34', 'line': '5'},
-        #                        'start': {'character': '31', 'line': '5'}},
-        #              'uri': 'file:///Users/ramunas/cattemplates.cpp'},
-        # 'name': 'obj'},
-
-        self.symbols = vim.eval('LanguageClient_runSync("LanguageClient_textDocument_documentSymbol", {})') or []
-        self.buffer = vim.current.buffer
-        self.name_len = max([0] + [len(s['name']) for s in self.symbols])
-
-    def match(self, pattern):
-        def jump(symbol):
-            loc = symbol['location']['range']['start']
-            line = int(loc['line']) + 1
-            col = int(loc['character'])
-            vim.command("normal m'")
-            vim.current.window.cursor = (line,col)
-
-        def kind(symbol):
-            k = int(symbol['kind'])
-            if k == 5:
-                return 'Type'
-            if k == 6:
-                return 'Method'
-            if k == 8:
-                return 'Member'
-            elif k == 12:
-                return 'Function'
-            return symbol['kind']
-
-        pattern = '*' + pattern + '*'
-        return [
-            (lambda symbol:
-                lambda_obj(SelectionItem,
-                view = lambda s: ('%-' + str(self.name_len) + 's %-10s %s') % (symbol['name'], kind(symbol), self.buffer[int(symbol['location']['range']['start']['line'])][0:80]),
-                on_select = lambda s: jump(symbol)
-                ))(symbol) for symbol in self.symbols if fnmatch.fnmatch(symbol['name'], pattern)
-        ]
-
-    def syntax(self):
-        vim.command('syntax match Identifier |\%1c.*\%' + str(self.name_len+1) + 'c|')
-        vim.command('syntax match Type |\%' + str(self.name_len+2) + 'c.*\%' + str(self.name_len+2+10) + 'c|')
-        vim.command('syntax match Comment |\%' + str(self.name_len+2+10+1) + 'c.*$|')
-
 EOF
 
 function! Buffers()
@@ -376,9 +327,5 @@ endfunction
 
 function! Files()
 python3 selection_window(FileList())
-endfunction
-
-function! LanguageClientSymbolList()
-python3 selection_window(LanguageClientSymbolList())
 endfunction
 
