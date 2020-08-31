@@ -223,7 +223,7 @@ class FileList(SelectionList):
                 lambda_obj(SelectionItem,
                     dismiss = True,
                     view = lambda s: '[edit ' + filepath  + ']',
-                    on_select = lambda s: vim.command("edit " + filepath)
+                    on_select = lambda s: vim.command("edit " + filepath.replace('%', '\\%'))
                 ),
                 lambda_obj(SelectionItem,
                     dismiss = False,
