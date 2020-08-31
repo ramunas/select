@@ -146,7 +146,7 @@ class FileList(SelectionList):
             return tuple( (filter(p, it) for p in predicates ) )
 
         glob_pattern = os.path.expandvars(os.path.expanduser(pattern))
-        if glob_pattern[0:1] != '/' and glob_pattern[0:2] != '..':
+        if glob_pattern[0:1] != '/' and glob_pattern[0:2] != '..' and glob_pattern[0:1] != '.':
             glob_pattern = '*' + glob_pattern
 
         if glob_pattern != '..':
