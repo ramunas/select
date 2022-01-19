@@ -124,6 +124,21 @@ class BufferList(SelectionList):
             for i in range(len(buffers))
         ]
 
+class GitTreeList(SelectionList):
+    def git_ls_files(self):
+        import subprocess
+        result = subprocess.run('git ls-files', shell=True, capture_output=True)
+        raw_files = result.stdout
+        return raw_files.decode('utf8').split('\n')
+
+    def match(self, pattern):
+        import fnmatch
+
+        pattern = '*' + pattern + '*'
+        files = (name for name in self.git_ls_files() if fnmatch.fnmatch(name, pattern))
+        return [(lambda n: lambda_obj(SelectionItem, view=lambda s: n,
+                    on_select = lambda s: vim.command("edit " + n.replace('%', '\\%'))
+                    ))(name) for name in files]
 
 
 class FileList(SelectionList):
@@ -152,7 +167,7 @@ class FileList(SelectionList):
         if glob_pattern != '..':
             glob_pattern = glob_pattern + '*'
 
-        files = glob.iglob(glob_pattern)
+        files = list(glob.iglob(glob_pattern))
 
         matched = files != []
         result = []
@@ -329,3 +344,6 @@ function! Files()
 python3 selection_window(FileList())
 endfunction
 
+function! GitFiles()
+python3 selection_window(GitTreeList())
+endfunction
