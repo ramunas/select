@@ -125,11 +125,20 @@ class BufferList(SelectionList):
         ]
 
 class GitTreeList(SelectionList):
-    def git_ls_files(self):
+    def run(self, cmd):
         import subprocess
-        result = subprocess.run('git ls-files', shell=True, capture_output=True)
-        raw_files = result.stdout
-        return raw_files.decode('utf8').split('\n')
+        result = subprocess.run(cmd, shell=True, capture_output=True)
+        return result.stdout.decode('utf8')
+
+    def git_ls_files(self):
+        rel_git_top = '.'
+        for i in range(20):
+            if os.path.exists(rel_git_top + '/.git'):
+                break
+            rel_git_top += '/..'
+        print(rel_git_top)
+        raw_files = self.run('git ls-files %s' % rel_git_top)
+        return raw_files.split('\n')
 
     def match(self, pattern):
         import fnmatch
