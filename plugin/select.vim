@@ -3,6 +3,7 @@ import vim
 import fnmatch
 import itertools
 import os.path
+import functools
 
 
 def lambda_obj(*i, **d):
@@ -130,13 +131,14 @@ class GitTreeList(SelectionList):
         result = subprocess.run(cmd, shell=True, capture_output=True)
         return result.stdout.decode('utf8')
 
-    def git_ls_files(self):
+    @functools.cache
+    def git_ls_files(self, dir):
+        print(dir)
         rel_git_top = '.'
         for i in range(20):
             if os.path.exists(rel_git_top + '/.git'):
                 break
             rel_git_top += '/..'
-        print(rel_git_top)
         raw_files = self.run('git ls-files %s' % rel_git_top)
         return raw_files.split('\n')
 
@@ -144,7 +146,7 @@ class GitTreeList(SelectionList):
         import fnmatch
 
         pattern = '*' + pattern + '*'
-        files = (name for name in self.git_ls_files() if fnmatch.fnmatch(name, pattern))
+        files = (name for name in self.git_ls_files(os.path.abspath(os.getcwd())) if fnmatch.fnmatch(name, pattern))
         return [(lambda n: lambda_obj(SelectionItem, view=lambda s: n,
                     on_select = lambda s: vim.command("edit " + n.replace('%', '\\%'))
                     ))(name) for name in files]
