@@ -127,9 +127,15 @@ class BufferList(SelectionList):
 
 class GitTreeList(SelectionList):
     def run_cmd(self, cmd):
-        import subprocess
-        result = subprocess.run(cmd, shell=True, capture_output=True)
-        return result.stdout.decode('utf8')
+        import os
+        file_name = os.path.expanduser('~/.vim/tmp-cmd')
+        os.system(cmd + ' > ' + file_name)
+        with open(file_name, 'r') as f:
+            return f.read()
+
+        # import subprocess
+        # result = subprocess.run(cmd, shell=True, capture_output=True)
+        # return result.stdout.decode('utf8')
 
     @functools.cache
     def git_ls_files(self, dir):
