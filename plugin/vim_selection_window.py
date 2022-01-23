@@ -3,6 +3,9 @@ import fnmatch
 import itertools
 import os.path
 import functools
+import logging
+
+# logging.basicConfig(filename=os.path.expanduser('~/vim.log'), encoding='utf-8', level=logging.DEBUG)
 
 
 def lambda_obj(*i, **d):
@@ -33,7 +36,7 @@ def map_normal_key(key, action):
 
 def map_insert_key(key, action):
     i = add_callback(action)
-    vim.command("imap <silent> <buffer> %s <C-O>:python3 %s<cr>" % (key, call_callback_text(i)))
+    vim.command("imap <silent> <buffer> %s <C-o>:python3 %s<cr>" % (key, call_callback_text(i)))
 
 def add_event_listener(event, action):
     i = add_callback(action)
@@ -292,19 +295,15 @@ def selection_window(source):
     layout = [ (w, w.width, w.height) for w in vim.windows]
 
     new_panel()
+    b = vim.current.buffer
+    w = vim.current.window
     vim.command('setlocal cursorline')
     vim.command('setlocal nowrap')
     vim.command('set filetype=Select')
 
-    b = vim.current.buffer
-    w = vim.current.window
-
     source.syntax()
 
     b[0] = ''
-
-    def match_glob_pattern(pattern, string):
-        return fnmatch.fnmatch(string.lower(), '*' + pattern.lower() + '*')
 
     matched = [None]
     def match(s):
@@ -312,13 +311,24 @@ def selection_window(source):
         matched[0] = matches
         b[1:] = [ x.view() for x in matched[0] ]
 
+    is_text_change = [False]
+
     def text_changed():
         line = b[0].strip()
         match(line)
-        if w.cursor[0] > 1: w.cursor = (1, len(b[0]))
+        if not is_text_change[0]:
+            is_text_change[0] = True
+            return
+        if w.cursor[0] > 1:
+            w.cursor = (1, len(b[0]))
+
+    def keep_cursor_position():
+        is_text_change[0] = False
 
     add_event_listener('TextChanged', text_changed)
     add_event_listener('TextChangedI', text_changed)
+    add_event_listener('InsertEnter', keep_cursor_position)
+    add_event_listener('InsertLeave', keep_cursor_position)
 
     def select():
         line = w.cursor[0]
