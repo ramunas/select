@@ -46,6 +46,9 @@ def new_panel():
     vim.command("botright new")
     vim.command("setlocal nobuflisted nomodified buftype=nofile bufhidden=wipe")
 
+def run_cmd(cmd):
+    print("Running command")
+    return vim.eval("system('%s')" % cmd)
 
 def start_insert_after_cursor():
     (line,col) = vim.current.window.cursor
@@ -128,17 +131,6 @@ class BufferList(SelectionList):
         ]
 
 class GitTreeList(SelectionList):
-    def run_cmd(self, cmd):
-        import os
-        file_name = os.path.expanduser('~/.vim/tmp-cmd')
-        os.system(cmd + ' > ' + file_name)
-        with open(file_name, 'r') as f:
-            return f.read()
-
-        # import subprocess
-        # result = subprocess.run(cmd, shell=True, capture_output=True)
-        # return result.stdout.decode('utf8')
-
     @functools.cache
     def git_ls_files(self, dir):
         rel_git_top = '.'
@@ -146,7 +138,7 @@ class GitTreeList(SelectionList):
             if os.path.exists(rel_git_top + '/.git'):
                 break
             rel_git_top += '/..'
-        raw_files = self.run_cmd('git ls-files %s' % rel_git_top)
+        raw_files = run_cmd('git ls-files %s' % rel_git_top)
         return raw_files.split('\n')
 
     def match(self, pattern):
