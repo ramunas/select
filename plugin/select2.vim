@@ -29,11 +29,13 @@ def SelectionSelect()
     var Sel = b:selection_matches[line]['select']
     var sel_win = b:selection_window
 
+
     # execute selection action in the context of the original window
     execute ':' b:initial_window 'wincmd w'
     Sel()
     execute ':' sel_win 'wincmd w'
     wincmd c
+    stopinsert
 enddef
 
 def BufferListSelection(pattern: string): list<dict<any>>
@@ -97,10 +99,10 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     autocmd InsertEnter <buffer> IgnoreTextChangeEvent()
 
     map <silent> <buffer> q :close<cr>
-    map <silent> <buffer> <Enter> <ScriptCmd>SelectionSelect()<cr>
-    imap <silent> <buffer> <Enter> <c-o>:<ScriptCmd>SelectionSelect()<cr>
+    map <silent> <buffer> <cr> <ScriptCmd>SelectionSelect()<cr>
+    inoremap <silent> <buffer> <cr> <c-o>:<ScriptCmd>SelectionSelect()<cr><esc>
     map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
-    # imap <silent> <buffer> <2-LeftMouse> <C-O>=<ScriptCmd>SelectionSelect()<cr>
+    inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr><esc>
 
     Init()
 
