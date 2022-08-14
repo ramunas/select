@@ -18,6 +18,9 @@ enddef
 
 def SelectionSelect()
     var line = getcurpos()[1] - 2
+    if line < 0
+        line = 0
+    endif
     var Sel = b:selection_matches[line]['select']
     var sel_win = b:selection_window
 
@@ -25,25 +28,39 @@ def SelectionSelect()
     execute ':' b:initial_window 'wincmd w'
     Sel()
     execute ':' sel_win 'wincmd w'
+    wincmd c
 enddef
 
 def BufferListSelection(pattern: string): list<dict<any>>
     var buf_list = getbufinfo({buflisted: 1})
+    var Bname = (b) => fnamemodify(bufname(b['bufnr']), ':t')
+    var Relpath = (n) => fnamemodify(n, ':.')
 
     var reg_pattern = glob2regpat('*' .. pattern .. '*')
-    buf_list = filter(buf_list, (_, b) => (bufname(b['bufnr']) =~ reg_pattern))
+    buf_list = filter(buf_list, (_, b) => (Bname(b) =~ reg_pattern))
 
-    var l = mapnew(buf_list, (_, x): dict<any> => (
+    var max_width = max(mapnew(buf_list, (_, b) => len(Bname(b))))
+
+    return mapnew(buf_list, (_, x): dict<any> => (
         {
-                view: (() => bufname(x['bufnr'])),
+                view: () =>
+                    printf('%-' .. max_width .. 's %3d %s', Bname(x), x['bufnr'], Relpath(x['name'])),
                 select: (() => {
                     execute 'buffer' x['bufnr']
                 })
         }))
-    return l
 enddef
 
-def ShowSelectionWindow(Match: func(string): list<dict<any>>)
+def BufferListInit()
+    syntax match LineNr |\<[0-9]\+\>|
+    syntax match Type |^.\{-} |
+enddef
+
+def SelectionWindowClosed()
+    execute ':' b:initial_window 'wincmd w'
+enddef
+
+def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     var initial_window = winnr()
     var initial_buffer = bufnr()
 
@@ -62,12 +79,23 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>)
 
     autocmd TextChanged <buffer> SelectionPromptOnChange()
     autocmd TextChangedI <buffer> SelectionPromptOnChange()
+    autocmd WinClosed <buffer> SelectionWindowClosed()
 
     map <silent> <buffer> q :close<cr>
     map <silent> <buffer> <Enter> <ScriptCmd>SelectionSelect()<cr>
     imap <silent> <buffer> <Enter> <c-o>:call <ScriptCmd>SelectionSelect()<cr>
+    map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
+    imap <silent> <buffer> <2-LeftMouse> <c-o>:call <ScriptCmd>SelectionSelect()<cr>
+
+    Init()
+
+    setline(1, '')
+    SelectionPromptOnChange()
 
     startinsert
 enddef
 
-command ShowSelection ShowSelectionWindow(BufferListSelection)
+def Nothing()
+enddef
+
+command ShowSelection ShowSelectionWindow(BufferListSelection, BufferListInit)
