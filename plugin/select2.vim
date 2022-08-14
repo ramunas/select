@@ -1,6 +1,11 @@
 vim9script
 
 def SelectionPromptOnChange()
+    if b:ignore_text_changed_event
+        b:ignore_text_changed_event = false
+        return
+    endif
+
     var pattern = getline(1)
 
     var pos = getcurpos()
@@ -60,6 +65,10 @@ def SelectionWindowClosed()
     execute ':' b:initial_window 'wincmd w'
 enddef
 
+def IgnoreTextChangeEvent()
+    b:ignore_text_changed_event = true
+enddef
+
 def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     var initial_window = winnr()
     var initial_buffer = bufnr()
@@ -76,16 +85,22 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     b:initial_window = initial_window
     b:initial_buffer = initial_buffer
     b:selection_window = selection_window
+    b:ignore_text_changed_event = false
 
     autocmd TextChanged <buffer> SelectionPromptOnChange()
     autocmd TextChangedI <buffer> SelectionPromptOnChange()
     autocmd WinClosed <buffer> SelectionWindowClosed()
 
+    # entering and leaving the insert mode, causes fireing of TextChanged.
+    # Thus, it needs to be ignored in order not to rematch and redraw.
+    autocmd InsertLeave <buffer> IgnoreTextChangeEvent()
+    autocmd InsertEnter <buffer> IgnoreTextChangeEvent()
+
     map <silent> <buffer> q :close<cr>
     map <silent> <buffer> <Enter> <ScriptCmd>SelectionSelect()<cr>
-    imap <silent> <buffer> <Enter> <c-o>:call <ScriptCmd>SelectionSelect()<cr>
+    imap <silent> <buffer> <Enter> <c-o>:<ScriptCmd>SelectionSelect()<cr>
     map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
-    imap <silent> <buffer> <2-LeftMouse> <c-o>:call <ScriptCmd>SelectionSelect()<cr>
+    # imap <silent> <buffer> <2-LeftMouse> <C-O>=<ScriptCmd>SelectionSelect()<cr>
 
     Init()
 
