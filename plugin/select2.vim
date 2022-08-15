@@ -92,5 +92,7 @@ def Nothing()
 enddef
 
 import "./bufferlist.vim" as that
+command ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
 
-command ShowSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
+# import "./filelist.vim" as that
+# command ShowSelection ShowSelectionWindow(that.List, that.Init)
