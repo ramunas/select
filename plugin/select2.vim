@@ -29,38 +29,12 @@ def SelectionSelect()
     var Sel = b:selection_matches[line]['select']
     var sel_win = b:selection_window
 
-
     # execute selection action in the context of the original window
     execute ':' b:initial_window 'wincmd w'
     Sel()
     execute ':' sel_win 'wincmd w'
     wincmd c
     stopinsert
-enddef
-
-def BufferListSelection(pattern: string): list<dict<any>>
-    var buf_list = getbufinfo({buflisted: 1})
-    var Bname = (b) => fnamemodify(bufname(b['bufnr']), ':t')
-    var Relpath = (n) => fnamemodify(n, ':.')
-
-    var reg_pattern = glob2regpat('*' .. pattern .. '*')
-    buf_list = filter(buf_list, (_, b) => (Bname(b) =~ reg_pattern))
-
-    var max_width = max(mapnew(buf_list, (_, b) => len(Bname(b))))
-
-    return mapnew(buf_list, (_, x): dict<any> => (
-        {
-                view: () =>
-                    printf('%-' .. max_width .. 's %3d %s', Bname(x), x['bufnr'], Relpath(x['name'])),
-                select: (() => {
-                    execute 'buffer' x['bufnr']
-                })
-        }))
-enddef
-
-def BufferListInit()
-    syntax match LineNr |\<[0-9]\+\>|
-    syntax match Type |^.\{-} |
 enddef
 
 def SelectionWindowClosed()
@@ -74,6 +48,7 @@ enddef
 def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     var initial_window = winnr()
     var initial_buffer = bufnr()
+    var alternate_buffer = bufnr('#')
 
     # open the selection pane
     botright new
@@ -88,6 +63,7 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     b:initial_buffer = initial_buffer
     b:selection_window = selection_window
     b:ignore_text_changed_event = false
+    b:alternate_buffer = alternate_buffer
 
     autocmd TextChanged <buffer> SelectionPromptOnChange()
     autocmd TextChangedI <buffer> SelectionPromptOnChange()
@@ -100,9 +76,9 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
 
     map <silent> <buffer> q :close<cr>
     map <silent> <buffer> <cr> <ScriptCmd>SelectionSelect()<cr>
-    inoremap <silent> <buffer> <cr> <c-o>:<ScriptCmd>SelectionSelect()<cr><esc>
+    inoremap <silent> <buffer> <cr> <c-o><ScriptCmd>SelectionSelect()<cr>
     map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
-    inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr><esc>
+    inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr>
 
     Init()
 
@@ -115,4 +91,6 @@ enddef
 def Nothing()
 enddef
 
-command ShowSelection ShowSelectionWindow(BufferListSelection, BufferListInit)
+import "./bufferlist.vim" as that
+
+command ShowSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
