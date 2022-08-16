@@ -37,6 +37,24 @@ def SelectionSelect()
     stopinsert
 enddef
 
+def SelectionSelectAll()
+    var Sel = b:selection_matches
+    var init_win = b:initial_window
+    var sel_win = b:selection_window
+    var wd = getcwd()
+
+    for match in Sel
+        execute ':' init_win 'wincmd w'
+        execute 'cd' wd
+        match['select']()
+        execute ':' sel_win 'wincmd w'
+    endfor
+
+    wincmd c
+    stopinsert
+enddef
+
+
 def SelectionWindowClosed()
     execute ':' b:initial_window 'wincmd w'
 enddef
@@ -76,6 +94,7 @@ def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
 
     map <silent> <buffer> q :close<cr>
     map <silent> <buffer> <cr> <ScriptCmd>SelectionSelect()<cr>
+    map <silent> <buffer> ga <ScriptCmd>SelectionSelectAll()<cr>
     inoremap <silent> <buffer> <cr> <c-o><ScriptCmd>SelectionSelect()<cr>
     map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
     inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr>
@@ -92,7 +111,7 @@ def Nothing()
 enddef
 
 import "./bufferlist.vim" as that
-command ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
+command! ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
 
 import "./gitlist.vim" as git
-command ShowGitSelection ShowSelectionWindow(git.List, git.Init)
+command! ShowGitSelection ShowSelectionWindow(git.List, git.Init)
