@@ -58,6 +58,7 @@ export def List(pattern: string): list<dict<any>>
 
     var special = [
         {
+                name: '..',
                 view: () => '..',
                 select: () => {
                     execute ':' w:selection_window 'wincmd w'
@@ -67,7 +68,8 @@ export def List(pattern: string): list<dict<any>>
                 }
         },
         {
-                view: () => '- [' .. b:last_dir .. ']',
+                name: '--',
+                view: () => '-- [' .. b:last_dir .. ']',
                 select: () => {
                     execute ':' w:selection_window 'wincmd w'
                     b:selection_keep_open = true
@@ -78,7 +80,7 @@ export def List(pattern: string): list<dict<any>>
         }
         ]
 
-    filter(special, (_, x) => x['view']() =~ re_pattern)
+    filter(special, (_, x) => x['name'] =~ re_pattern)
 
     extend(result, special)
 
