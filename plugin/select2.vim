@@ -115,3 +115,6 @@ command! ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.
 
 import "./gitlist.vim" as git
 command! ShowGitSelection ShowSelectionWindow(git.List, git.Init)
+
+import "./filelist.vim" as file
+command! ShowFileSelection ShowSelectionWindow(file.List, file.Init)
