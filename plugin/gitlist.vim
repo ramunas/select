@@ -12,29 +12,27 @@ def RelPath(base_path: string, path: string): string
     return (rel_path == '') ? '.' : rel_path
 enddef
 
-
-
 def GitLsFiles(path: string): list<string>
+    if !exists('b:git_ls_path')
+        b:git_ls_path = ''
+        b:git_ls_result = []
+    endif
     if path == b:git_ls_path
         return b:git_ls_result
     endif
-    var files = systemlist('git ls-files "' .. path .. '"')
+    b:git_ls_result = systemlist('git ls-files "' .. path .. '"')
     b:git_ls_path = path
-    b:git_ls_result = files
-    return files
+    return b:git_ls_result
 enddef
 
 export def List(pattern: string): list<dict<any>>
     var git_top = system('git rev-parse --show-toplevel')
     var relative_git_top = RelPath(trim(git_top), getcwd())
 
-    b:git_ls_path = ''
-    b:git_ls_result = []
-
     var files = GitLsFiles(relative_git_top)
 
     var reg_pattern = glob2regpat('*' .. pattern .. '*')
-    files = filter(files, (_, b) => (b =~ reg_pattern))
+    files = filter(copy(files), (_, b) => (b =~ reg_pattern))
 
     return mapnew(files, (_, x): dict<any> => (
         {
