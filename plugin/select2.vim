@@ -29,12 +29,21 @@ def SelectionSelect()
     var Sel = b:selection_matches[line]['select']
     var sel_win = b:selection_window
 
+    b:selection_keep_open = false
+    var wd = getcwd()
     # execute selection action in the context of the original window
     execute ':' b:initial_window 'wincmd w'
+    execute 'cd' wd
+    w:selection_window = sel_win
     Sel()
     execute ':' sel_win 'wincmd w'
-    wincmd c
-    stopinsert
+    if b:selection_keep_open
+        setline(1, '')
+        SelectionPromptOnChange()
+    else
+        wincmd c
+        stopinsert
+    endif
 enddef
 
 def SelectionSelectAll()
