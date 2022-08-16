@@ -13,22 +13,23 @@ def RelPath(base_path: string, path: string): string
 enddef
 
 
-var git_ls_path = ''
-var git_ls_result: list<string> = []
 
 def GitLsFiles(path: string): list<string>
-    if path == git_ls_path
-        return git_ls_result
+    if path == b:git_ls_path
+        return b:git_ls_result
     endif
     var files = systemlist('git ls-files "' .. path .. '"')
-    git_ls_path = path
-    git_ls_result = files
+    b:git_ls_path = path
+    b:git_ls_result = files
     return files
 enddef
 
 export def List(pattern: string): list<dict<any>>
     var git_top = system('git rev-parse --show-toplevel')
     var relative_git_top = RelPath(trim(git_top), getcwd())
+
+    b:git_ls_path = ''
+    b:git_ls_result = []
 
     var files = GitLsFiles(relative_git_top)
 
