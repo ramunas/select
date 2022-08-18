@@ -26,6 +26,11 @@ def SelectionSelect()
     if line < 0
         line = 0
     endif
+
+    if len(b:selection_matches) == 0
+        return
+    endif
+
     var Sel = b:selection_matches[line]['select']
     var sel_win = b:selection_window
 
