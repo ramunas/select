@@ -1,3 +1,6 @@
+if !has('python3')
+    return
+endif
 
 let s:selection_window_path = expand('<sfile>:p:h')
 
