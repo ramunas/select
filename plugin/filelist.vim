@@ -34,6 +34,10 @@ export def List(pattern: string): list<dict<any>>
     sort(directories)
 
     var result = []
+    var KeepOpen = () => {
+        execute ':' w:selection_window 'wincmd w'
+        b:selection_keep_open = true
+    }
 
     extend(result, mapnew(files, (_, x): dict<any> => (
         {
@@ -49,8 +53,7 @@ export def List(pattern: string): list<dict<any>>
                 view: () =>
                     '  ' .. x .. '/',
                 select: (() => {
-                    execute ':' w:selection_window 'wincmd w'
-                    b:selection_keep_open = true
+                    KeepOpen()
                     b:last_dir = getcwd()
                     execute 'cd' escape(x, ' %')
                 })
@@ -59,29 +62,33 @@ export def List(pattern: string): list<dict<any>>
     var special = [
         {
                 name: '..',
-                view: () => '..',
+                view: () => ' ..',
                 select: () => {
-                    execute ':' w:selection_window 'wincmd w'
-                    b:selection_keep_open = true
+                    KeepOpen()
                     b:last_dir = getcwd()
                     cd ..
                 }
         },
         {
-                name: '--',
-                view: () => '-- [' .. b:last_dir .. ']',
+                name: '-',
+                view: () => ' - ' .. b:last_dir,
                 select: () => {
-                    execute ':' w:selection_window 'wincmd w'
-                    b:selection_keep_open = true
+                    KeepOpen()
                     var dir = b:last_dir
                     b:last_dir = getcwd()
                     execute 'cd' dir
                 }
         }
+        {
+                name: './',
+                view: () => ' . ' .. getcwd(),
+                select: () => {
+                    KeepOpen()
+                }
+        }
         ]
 
     filter(special, (_, x) => x['name'] =~ re_pattern)
-
     extend(result, special)
 
     return result
