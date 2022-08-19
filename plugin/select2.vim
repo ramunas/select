@@ -77,7 +77,7 @@ def IgnoreTextChangeEvent()
     b:ignore_text_changed_event = true
 enddef
 
-def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
+export def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func())
     var initial_window = winnr()
     var initial_buffer = bufnr()
     var alternate_buffer = bufnr('#')
