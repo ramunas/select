@@ -6,8 +6,8 @@ def Grep(grep: string)
         var info = split(x, ':')
         var file = info[0]
         var line = info[1]
-        var rest = info[2]
-        return [file, line, rest]
+        var rest = info[2 : ]
+        return [file, line, join(rest, ':')]
     })
 enddef
 
@@ -18,11 +18,15 @@ enddef
 def List(pattern: string): list<dict<any>>
     var pat = glob2regpat('*' .. pattern .. '*')
     var res = filter(copy(b:grep_list), (_, x) => x[0] =~ pat)
+
+    var col_size = max(mapnew(res, (_, x) => len(x[0])))
+
     return mapnew(res, (_, x): dict<any> => (
         {
                 view: () =>
-                    (x[0] .. ' ' .. x[1] .. ' ' .. x[2]),
+                    printf('%-' .. col_size .. 's %3s %s', x[0], x[1], x[2]),
                 select: (() => {
+                    execute 'edit' x[0]
                 })
         }))
 enddef
