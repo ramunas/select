@@ -1,7 +1,9 @@
 vim9script
 
 def Grep(grep: string)
-    var grep_res = systemlist('grep -n "' .. grep .. '" *')
+    execute 'syntax match Underlined |' .. grep .. '|'
+
+    var grep_res = systemlist('grep -d skip -n "' .. grep .. '" *')
     b:grep_list = mapnew(grep_res, (_, x) => {
         var info = split(x, ':')
         var file = info[0]
@@ -17,7 +19,7 @@ enddef
 
 def List(pattern: string): list<dict<any>>
     var pat = glob2regpat('*' .. pattern .. '*')
-    var res = filter(copy(b:grep_list), (_, x) => x[0] =~ pat)
+    var res = filter(copy(b:grep_list), (_, x) => x[0] =~ pat || x[2] =~ pat)
 
     var col_size = max(mapnew(res, (_, x) => len(x[0])))
 
@@ -32,4 +34,4 @@ def List(pattern: string): list<dict<any>>
 enddef
 
 import "./select2.vim" as sel
-command! ShowGrepList sel.ShowSelectionWindow(List, () => Grep('mapnew'))
+command! -nargs=1 ShowGrepList sel.ShowSelectionWindow(List, () => Grep('<args>'))
