@@ -21,12 +21,14 @@ def List(pattern: string): list<dict<any>>
     var pat = glob2regpat('*' .. pattern .. '*')
     var res = filter(copy(b:grep_list), (_, x) => x[0] =~ pat || x[2] =~ pat)
 
-    var col_size = max(mapnew(res, (_, x) => len(x[0])))
+    var file_col_size = max(mapnew(res, (_, x) => len(x[0])))
+    var file_num_col_size = max(mapnew(res, (_, x) => len(x[1])))
 
     return mapnew(res, (_, x): dict<any> => (
         {
                 view: () =>
-                    printf('%-' .. col_size .. 's %3s %s', x[0], x[1], x[2]),
+                    printf('%-' .. file_col_size ..
+                        's %' .. file_num_col_size .. 's %s', x[0], x[1], x[2]),
                 select: (() => {
                     execute 'edit' x[0]
                     execute ':' x[1]
