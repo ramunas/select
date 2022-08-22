@@ -78,7 +78,7 @@ export def List(pattern: string): list<dict<any>>
                     b:last_dir = getcwd()
                     execute 'cd' dir
                 }
-        }
+        },
         {
                 name: './',
                 view: () => ' . ' .. getcwd(),
