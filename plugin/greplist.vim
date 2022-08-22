@@ -1,15 +1,13 @@
 vim9script
 
-var GrepCurDir = (grep) => 'grep -d skip -n "' .. grep .. '" *'
-var GrepCurDirRec = (grep) => 'grep -r -n "' .. grep .. '" *'
-
 def Grep(grep: string, GrepCmd: func(string): string)
     execute 'syntax match Search |' .. grep .. '|'
     syntax match Type /^.\{-} /
     syntax match StatusLine /\<\d\{-}\>/
 
-    var grep_res = systemlist(GrepCmd(grep))
-    # var grep_res = systemlist('grep -d skip -n "' .. grep .. '" *')
+    var cmd = GrepCmd(grep)
+    var grep_res = systemlist(cmd)
+
     b:grep_list = mapnew(grep_res, (_, x) => {
         var info = split(x, ':')
         var file = info[0]
@@ -17,10 +15,6 @@ def Grep(grep: string, GrepCmd: func(string): string)
         var rest = info[2 : ]
         return [file, line, join(rest, ':')]
     })
-enddef
-
-def Init(grep: string): func()
-    return () => (Grep(grep))
 enddef
 
 def List(pattern: string): list<dict<any>>
@@ -41,4 +35,18 @@ def List(pattern: string): list<dict<any>>
 enddef
 
 import "./select2.vim" as sel
-command! -nargs=1 ShowGrepList sel.ShowSelectionWindow(List, () => Grep('<args>', GrepCurDir))
+
+def GrepList(grep: string, GrepCmd: func(string): string)
+    sel.ShowSelectionWindow(List, () => Grep(grep, GrepCmd))
+enddef
+
+var GrepCurDir = (grep) => 'grep -d skip -n "' .. grep .. '" *'
+var GrepCurDirRec = (grep) => 'grep -r -n "' .. grep .. '" *'
+var GitGrep = (grep) => 'git grep -n "' .. grep .. '"'
+var GitGrepRoot = (grep) => 'git grep -n "' .. grep .. '" "$(git rev-parse --show-toplevel)"'
+
+command! -nargs=1 ShowGrepList GrepList('<args>', GrepCurDir)
+command! -nargs=1 ShowGrepRecList GrepList('<args>', GrepCurDirRec)
+command! -nargs=1 ShowGitGrepList GrepList('<args>', GitGrep)
+command! -nargs=1 ShowGitGrepRootList GrepList('<args>', GitGrepRoot)
+
