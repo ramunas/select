@@ -27,7 +27,12 @@ enddef
 
 export def List(pattern: string): list<dict<any>>
     var git_top = system('git rev-parse --show-toplevel')
-    var relative_git_top = RelPath(trim(git_top), getcwd())
+    if v:shell_error
+        echoerr git_top
+        return []
+    endif
+    var relative_git_top = trim(git_top), getcwd()
+    # var relative_git_top = RelPath(trim(git_top), getcwd())
 
     var files = GitLsFiles(relative_git_top)
 
