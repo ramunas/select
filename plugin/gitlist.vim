@@ -31,7 +31,7 @@ export def List(pattern: string): list<dict<any>>
         echoerr git_top
         return []
     endif
-    var relative_git_top = trim(git_top), getcwd()
+    var relative_git_top = trim(git_top)
     # var relative_git_top = RelPath(trim(git_top), getcwd())
 
     var files = GitLsFiles(relative_git_top)
