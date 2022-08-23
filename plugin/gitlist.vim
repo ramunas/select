@@ -27,7 +27,7 @@ enddef
 
 export def List(pattern: string): list<dict<any>>
     var git_top = system('git rev-parse --show-toplevel')
-    if v:shell_error
+    if v:shell_error > 0
         echoerr git_top
         return []
     endif
