@@ -127,8 +127,5 @@ enddef
 import "./bufferlist.vim" as that
 command! ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
 
-import "./gitlist.vim" as git
-command! ShowGitSelection ShowSelectionWindow(git.List, git.Init)
-
 import "./filelist.vim" as file
 command! ShowFileSelection ShowSelectionWindow(file.List, file.Init)

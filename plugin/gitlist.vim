@@ -1,6 +1,6 @@
 vim9script
 
-export def Init()
+def Init()
     syntax match Type |^.*$|
 enddef
 
@@ -25,7 +25,7 @@ def GitLsFiles(path: string): list<string>
     return b:git_ls_result
 enddef
 
-export def List(pattern: string): list<dict<any>>
+def List(pattern: string): list<dict<any>>
     var git_top = system('git rev-parse --show-toplevel')
     if v:shell_error > 0
         echoerr git_top
@@ -47,6 +47,7 @@ export def List(pattern: string): list<dict<any>>
                     execute 'edit' escape(x, ' %')
                 })
         }))
-
 enddef
 
+import "./select2.vim" as sel
+command! ShowGitSelection sel.ShowSelectionWindow(List, Init)
