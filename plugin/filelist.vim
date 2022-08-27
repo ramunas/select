@@ -96,7 +96,7 @@ def List(pattern: string): list<dict<any>>
             {
                     view: () => '  edit ' .. pattern,
                     select: () => {
-                        execute 'edit' pattern
+                        execute 'edit' escape(pattern, ' %')
                     }
             },
             {
@@ -104,7 +104,7 @@ def List(pattern: string): list<dict<any>>
                     select: () => {
                         KeepOpen()
                         system('mkdir ' .. shellescape(pattern))
-                        execute 'cd' pattern
+                        execute 'cd' escape(pattern, ' %')
                     }
             }
             ])
