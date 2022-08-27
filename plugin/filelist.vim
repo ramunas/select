@@ -1,6 +1,6 @@
 vim9script
 
-export def Init()
+def Init()
     syntax match Type |^.*$|
     syntax match Type |^.*\.|me=e-1
     syntax match Normal |\..*$|
@@ -23,7 +23,7 @@ def Partition(list: list<any>, Pred: func(any): bool): list<list<any>>
     return [a, b]
 enddef
 
-export def List(pattern: string): list<dict<any>>
+def List(pattern: string): list<dict<any>>
     var glob_pattern = (pattern == '') ? '*' : '*' .. pattern .. '*'
     var re_pattern = glob2regpat(glob_pattern)
     var all_files = glob(glob_pattern, true, true, true)
@@ -91,6 +91,27 @@ export def List(pattern: string): list<dict<any>>
     filter(special, (_, x) => x['name'] =~ re_pattern)
     extend(result, special)
 
+    if len(result) == 0
+        extend(result, [
+            {
+                    view: () => '  edit ' .. pattern,
+                    select: () => {
+                        execute 'edit' pattern
+                    }
+            },
+            {
+                    view: () => '  mkdir ' .. pattern,
+                    select: () => {
+                        KeepOpen()
+                        system('mkdir ' .. shellescape(pattern))
+                        execute 'cd' pattern
+                    }
+            }
+            ])
+    endif
+
     return result
 enddef
 
+import "./select2.vim" as sel
+command! ShowFileSelection sel.ShowSelectionWindow(List, Init)

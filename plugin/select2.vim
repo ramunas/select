@@ -127,5 +127,3 @@ enddef
 import "./bufferlist.vim" as that
 command! ShowBufferSelection ShowSelectionWindow(that.BufferListSelection, that.BufferListInit)
 
-import "./filelist.vim" as file
-command! ShowFileSelection ShowSelectionWindow(file.List, file.Init)
