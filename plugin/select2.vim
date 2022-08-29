@@ -110,8 +110,8 @@ export def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func(
     map <silent> <buffer> <cr> <ScriptCmd>SelectionSelect()<cr>
     map <silent> <buffer> ga <ScriptCmd>SelectionSelectAll()<cr>
     inoremap <silent> <buffer> <cr> <c-o><ScriptCmd>SelectionSelect()<cr>
-    map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr>
-    inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr>
+    map <silent> <buffer> <2-LeftMouse> <ScriptCmd>SelectionSelect()<cr><esc>
+    inoremap <silent> <buffer> <2-LeftMouse> <c-o>:<ScriptCmd>SelectionSelect()<cr><esc>
 
     Init()
 
