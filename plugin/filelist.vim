@@ -23,8 +23,19 @@ def Partition(list: list<any>, Pred: func(any): bool): list<list<any>>
     return [a, b]
 enddef
 
+def GlobPat(pat: string): string
+    var pattern = substitute(pat, '\~', $HOME, 'g')
+    if pattern == ''
+        return '*'
+    endif
+    if pattern[ : 2] == "../" || pattern[ : 1] == "./" || pattern[ : 0] == "/"
+        return pattern .. '*'
+    endif
+    return '*' .. pattern .. '*'
+enddef
+
 def List(pattern: string): list<dict<any>>
-    var glob_pattern = (pattern == '') ? '*' : '*' .. pattern .. '*'
+    var glob_pattern = GlobPat(pattern)
     var re_pattern = glob2regpat(glob_pattern)
     var all_files = glob(glob_pattern, true, true, true)
 
