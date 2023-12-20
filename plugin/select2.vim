@@ -44,6 +44,7 @@ def SelectionSelect()
     execute ':' sel_win 'wincmd w'
     if b:selection_keep_open
         setline(1, '')
+        b:ignore_text_changed_event = false
         SelectionPromptOnChange()
     else
         wincmd c
