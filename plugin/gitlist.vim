@@ -21,6 +21,9 @@ def GitLsFiles(path: string): list<string>
         return b:git_ls_result
     endif
     b:git_ls_result = systemlist('git ls-files "' .. path .. '"')
+    if v:shell_error > 0
+        echoerr "Error encountered"
+    endif
     b:git_ls_path = path
     return b:git_ls_result
 enddef
