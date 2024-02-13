@@ -31,7 +31,10 @@ def GlobPat(pat: string): string
     if pattern[ : 2] == "../" || pattern[ : 1] == "./" || pattern[ : 0] == "/"
         return pattern .. '*'
     endif
-    return '*' .. pattern .. '*'
+
+    pattern = '*' .. pattern .. '*'
+    pattern = substitute(pattern, '\*\+', '*', 'g')
+    return pattern
 enddef
 
 def List(pattern: string): list<dict<any>>
