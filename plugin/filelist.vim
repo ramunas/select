@@ -28,11 +28,20 @@ def GlobPat(pat: string): string
     if pattern == ''
         return '*'
     endif
-    if pattern[ : 2] == "../" || pattern[ : 1] == "./" || pattern[ : 0] == "/"
-        return pattern .. '*'
+
+    if pattern[ : 1] == "#/"
+        var top = system("git rev-parse --show-toplevel")
+        if v:shell_error
+            top = ""
+        endif
+        top = substitute(top, "\n", "", '')
+        pattern = top .. "/" .. pattern[2 : ] .. '*'
+    elseif pattern[ : 2] == "../" || pattern[ : 1] == "./" || pattern[ : 0] == "/"
+        pattern = pattern .. '*'
+    else
+        pattern = '*' .. pattern .. '*'
     endif
 
-    pattern = '*' .. pattern .. '*'
     pattern = substitute(pattern, '\*\+', '*', 'g')
     return pattern
 enddef
