@@ -31,7 +31,7 @@ def GlobPat(pat: string): string
 
     if pattern[ : 1] == "#/"
         var top = system("git rev-parse --show-toplevel")
-        if v:shell_error
+        if v:shell_error != 0
             top = ""
         endif
         top = substitute(top, "\n", "", '')
