@@ -82,11 +82,14 @@ export def ShowSelectionWindow(Match: func(string): list<dict<any>>, Init: func(
     var initial_window = winnr()
     var initial_buffer = bufnr()
     var alternate_buffer = bufnr('#')
+    var current_dir = getcwd()
 
     # open the selection pane
     botright new
     setlocal nobuflisted nomodified buftype=nofile bufhidden=wipe
     setlocal cursorline nowrap filetype=Select
+
+    execute 'silent cd' current_dir
 
     var buf = bufnr()
     var selection_window = winnr() 
